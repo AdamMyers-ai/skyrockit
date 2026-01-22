@@ -30,6 +30,13 @@ router.get("/new", async (req, res) => {
 // Update
 router.put("/:applicationId", async (req, res) => {
   try {
+    if (!company.trim()) {
+      throw new Error("Please provide a valid company name");
+    }
+    if (!title.trim()) {
+      throw new Error("Please provide a valid title.");
+    }
+
     // Find the user from req.session
     const currentUser = await User.findById(req.session.user._id);
     // Find the current application from the id supplied by req.params
@@ -46,7 +53,13 @@ router.put("/:applicationId", async (req, res) => {
     );
   } catch (error) {
     console.log(error);
-    res.redirect("/");
+    req.session.message = error.message;
+
+    req.session.save(() => {
+      res.redirect(
+        `/users/${req.session.user._id}/applications/${req.params.applicationId}/edit`
+      );
+    });
   }
 });
 
@@ -71,7 +84,16 @@ router.delete("/:applicationId", async (req, res) => {
 
 // Create
 router.post("/", async (req, res) => {
+  const { company, title } = req.body;
+
   try {
+    if (!company.trim()) {
+      throw new Error("Please provide a valid company name");
+    }
+    if (!title.trim()) {
+      throw new Error("Please provide a valid title.");
+    }
+
     // Look up the user from req.session
     const currentUser = await User.findById(req.session.user._id);
     // Push req.body (the new form data object) to the applications array of the current user
@@ -83,7 +105,11 @@ router.post("/", async (req, res) => {
   } catch (error) {
     // If any errors, log them and redirect back home
     console.log(error);
-    res.redirect("/");
+    req.session.message = error.message;
+
+    req.session.save(() => {
+      res.redirect(`/users/${req.session.user._id}/applications/new`);
+    });
   }
 });
 
